@@ -47,7 +47,7 @@ async def hello(message, say):
 @app.command("/add_mentor")
 async def add_mentor(ack, respond, command):
     await ack()
-    if command["channel_name"] != "mentors":
+    if command["channel_name"] != "private":
         await respond("You're not authorized")
         return
     db = sqlite3.connect("cpp-bmstu.db")
