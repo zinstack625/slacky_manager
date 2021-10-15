@@ -26,6 +26,11 @@ async def request_mentor(ack, respond, command):
     lab = command["text"]
     mentors = pull_mentors_from_db()
     mentor_tag = mentors[count][0]
+    await app.client.conversations_open(users=mentor_tag)
+    await app.client.chat_postMessage(
+        channel=mentor_tag,
+        text=lab
+    )
     await respond(f"{lab} was assigned to mentor <@{mentor_tag}>")
 
 
