@@ -40,6 +40,21 @@ async def hello(message, say):
     say("hello...")
 
 
+@app.command("/add_mentor")
+async def add_mentor(ack, respond, command):
+    await ack()
+    db = sqlite3.connect("cpp-bmstu.db")
+    mentor_cnt = db.execute("SELECT COUNT(*) FROM mentors").fetchall()[0][0]
+    mentor_id = command["user_id"]
+    if (mentor_id,) not in db.execute("SELECT TAG FROM mentors").fetchall():
+        db.execute(
+            f"INSERT INTO mentors VALUES('{mentor_cnt}', '{mentor_id}', NULL)")
+        await respond("Done")
+    else:
+        await respond("You're already in!")
+    db.commit()
+
+
 async def main():
     handler = AsyncSocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
     await handler.start_async()
