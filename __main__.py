@@ -25,12 +25,16 @@ async def request_mentor(ack, respond, command):
     await ack()
     lab = command["text"]
     mentors = pull_mentors_from_db()
+    global count
     mentor_tag = mentors[count][0]
     await app.client.conversations_open(users=mentor_tag)
     await app.client.chat_postMessage(
         channel=mentor_tag,
         text=lab
     )
+    db = sqlite3.connect("cpp-bmstu.db")
+    count = (
+        count + 1) % db.execute("SELECT COUNT(*) FROM mentors").fetchall()[0][0]
     await respond(f"{lab} was assigned to mentor <@{mentor_tag}>")
 
 
@@ -43,6 +47,9 @@ async def hello(message, say):
 @app.command("/add_mentor")
 async def add_mentor(ack, respond, command):
     await ack()
+    if command["channel_name"] != "mentors":
+        await respond("You're not authorized")
+        return
     db = sqlite3.connect("cpp-bmstu.db")
     mentor_cnt = db.execute("SELECT COUNT(*) FROM mentors").fetchall()[0][0]
     mentor_id = command["user_id"]
