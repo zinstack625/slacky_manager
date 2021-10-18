@@ -16,7 +16,7 @@ def pull_mentors_from_db():
 @app.command("/check_me")
 async def request_mentor(ack, respond, command):
     await ack()
-    lab = command["text"]
+    lab = command["text"][1:-1]
     if not url(lab):
         await respond("Please send a valid url")
         return
