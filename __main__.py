@@ -1,8 +1,8 @@
 from slack_bolt.async_app import AsyncApp
 from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
-# from logic import *
 import os
 import sqlite3
+from validators import url
 
 app = AsyncApp(token=os.environ["SLACK_BOT_TOKEN"])
 count = 0
@@ -13,35 +13,26 @@ def pull_mentors_from_db():
     return db.execute("SELECT TAG FROM mentors").fetchall()
 
 
-@app.command("/ping")
-async def pong(ack, say, command):
-    await ack()
-    print("got a command")
-    await say("Pong")
-
-
 @app.command("/check_me")
 async def request_mentor(ack, respond, command):
     await ack()
     lab = command["text"]
+    if not url(lab):
+        await respond("Please send a valid url")
+        return
     mentors = pull_mentors_from_db()
     global count
     mentor_tag = mentors[count][0]
+    sender_tag = command["user_id"]
     await app.client.conversations_open(users=mentor_tag)
     await app.client.chat_postMessage(
         channel=mentor_tag,
-        text=lab
+        text=f"<@{sender_tag}> {lab}"
     )
     db = sqlite3.connect("cpp-bmstu.db")
     count = (
         count + 1) % db.execute("SELECT COUNT(*) FROM mentors").fetchall()[0][0]
     await respond(f"{lab} was assigned to mentor <@{mentor_tag}>")
-
-
-@app.message("Hello")
-async def hello(message, say):
-    print("boring message")
-    say("hello...")
 
 
 @app.command("/add_mentor")
