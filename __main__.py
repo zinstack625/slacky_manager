@@ -9,8 +9,12 @@ app = AsyncApp(token=os.environ["SLACK_BOT_TOKEN"])
 count = 0
 
 
+def get_db():
+    return sqlite3.connect("/var/db/slackbot/cpp-bmstu.db")
+
+
 def pull_mentors_from_db():
-    db = sqlite3.connect("cpp-bmstu.db")
+    db = get_db()
     return db.execute("SELECT TAG FROM mentors").fetchall()
 
 
@@ -30,7 +34,7 @@ async def request_mentor(ack, respond, command):
         channel=mentor_tag,
         text=f"<@{sender_tag}> <{lab}>"
     )
-    db = sqlite3.connect("cpp-bmstu.db")
+    db = get_db()
     count = (
         count + 1) % db.execute("SELECT COUNT(*) FROM mentors").fetchall()[0][0]
     await respond(f"<{lab}> was assigned to mentor <@{mentor_tag}>")
@@ -42,7 +46,7 @@ async def add_mentor(ack, respond, command):
     if command["channel_name"] != "private":
         await respond("You're not authorized")
         return
-    db = sqlite3.connect("cpp-bmstu.db")
+    db = get_db()
     mentor_cnt = db.execute("SELECT COUNT(*) FROM mentors").fetchall()[0][0]
     mentor_id = command["user_id"]
     if (mentor_id,) not in db.execute("SELECT TAG FROM mentors").fetchall():
