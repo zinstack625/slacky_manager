@@ -6,28 +6,27 @@ import sqlite3
 from validators import url
 
 app = AsyncApp(token=os.environ["SLACK_BOT_TOKEN"])
-count = 0
 
 
 def get_db():
     return sqlite3.connect("/var/db/slackbot/cpp-bmstu.db")
 
 
-def pull_mentors_from_db():
-    db = get_db()
-    return db.execute("SELECT TAG FROM mentors").fetchall()
-
-
 @app.command("/check_me")
 async def request_mentor(ack, respond, command):
     await ack()
     lab = command["text"][1:-1]
-    if not url(lab) or search(r'https://github.com/bmstu-cbeer-2021-lab1/.*/pull/[0-9].*', lab) is None:
+    if not url(lab) or search(
+                r'https://github.com/bmstu-cbeer-2021-lab1/.*'
+                '/pull/[0-9].*', lab) is None:
         await respond("Please send a valid url")
         return
-    mentors = pull_mentors_from_db()
-    global count
-    mentor_tag = mentors[count][0]
+    db = get_db()
+    (mentor_tag, mentor_load) = db.execute(
+            "SELECT TAG FROM mentors ORDER BY LOAD LIMIT 1").fetchone()
+    db.execute(f"UPDATE mentors SET LOAD = {mentor_load + 1}"
+               "WHERE TAG = {mentor_tag}")
+    db.commit()
     sender_tag = command["user_id"]
     await app.client.conversations_open(users=mentor_tag)
     await app.client.chat_postMessage(
@@ -39,9 +38,6 @@ async def request_mentor(ack, respond, command):
         channel=mentor_tag,
         text=f"<{lab}> was assigned to mentor <@{mentor_tag}>"
     )
-    db = get_db()
-    count = (
-        count + 1) % db.execute("SELECT COUNT(*) FROM mentors").fetchall()[0][0]
     await respond(f"<{lab}> was assigned to mentor <@{mentor_tag}>")
 
 
@@ -52,15 +48,15 @@ async def add_mentor(ack, respond, command):
         await respond("You're not authorized")
         return
     db = get_db()
-    mentor_cnt = db.execute("SELECT COUNT(*) FROM mentors").fetchall()[0][0]
+    mentor_cnt = db.execute("SELECT COUNT(*) FROM mentors").fetchone()[0]
     mentor_id = command["user_id"]
     if (mentor_id,) not in db.execute("SELECT TAG FROM mentors").fetchall():
         db.execute(
-            f"INSERT INTO mentors VALUES('{mentor_cnt}', '{mentor_id}', NULL)")
+            f"INSERT INTO mentors VALUES('{mentor_cnt}', '{mentor_id}', 0)")
+        db.commit()
         await respond("Done")
     else:
         await respond("You're already in!")
-    db.commit()
 
 
 async def main():
