@@ -34,6 +34,11 @@ async def request_mentor(ack, respond, command):
         channel=mentor_tag,
         text=f"<@{sender_tag}> <{lab}>"
     )
+    await app.client.conversations_open(users=sender_tag)
+    await app.client.chat_postMessage(
+        channel=mentor_tag,
+        text=f"<{lab}> was assigned to mentor <@{mentor_tag}>"
+    )
     db = get_db()
     count = (
         count + 1) % db.execute("SELECT COUNT(*) FROM mentors").fetchall()[0][0]
