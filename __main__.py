@@ -13,23 +13,56 @@ def get_db():
     # return sqlite3.connect("cpp-bmstu.db")
 
 
-def get_blocks(sender_tag, lab):
+def get_revise_blocks(textbox):
     return [{
         "type": "section",
         "text": {
             "type": "mrkdwn",
-            "text": f"<@{sender_tag}> <{lab}>"
+            "text": textbox
         },
         "accessory": {
-            "type": "checkboxes",
-            "action_id": "approved",
-            "options": [{
-                "value": "is_approved",
+            "type": "button",
+            "action_id": "revise",
+            "text": {
+                "type": "plain_text",
+                "text": "Revise"
+            },
+            "confirm": {
+                "title": {
+                    "type": "plain_text",
+                    "text": "Confirmation"
+                },
                 "text": {
                     "type": "plain_text",
-                    "text": "Approved"
+                    "text": "Are you sure?"
+                },
+                "confirm": {
+                    "type": "plain_text",
+                    "text": "Yes"
+                },
+                "deny": {
+                    "type": "plain_text",
+                    "text": "No"
                 }
-            }],
+            }
+        }
+    }]
+
+
+def get_appr_blocks(textbox):
+    return [{
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": textbox
+        },
+        "accessory": {
+            "type": "button",
+            "action_id": "approved",
+            "text": {
+                "type": "plain_text",
+                "text": "Approve"
+            },
             "confirm": {
                 "title": {
                     "type": "plain_text",
@@ -53,26 +86,37 @@ def get_blocks(sender_tag, lab):
 
 
 @app.action("approved")
-async def approve_lab(ack, body, payload):
+async def approve_lab(ack, body, respond):
     await ack()
     # it's easy enough to pull the id from the request body
     checker_tag = body["user"]["id"]
+    # the same for message blocks
+    msg_blocks = get_revise_blocks(
+        body["message"]["blocks"][0]["text"]["text"])
     db = get_db()
-    # let's assume that if loop is not entered, all checkmarks are
-    # disabled, thus lab was unapproved, that's why here it's + 1
-    # over what's been before
     checker_load = db.execute(
         "SELECT LOAD FROM mentors WHERE TAG = ?", (checker_tag,)
     ).fetchone()[0] + 1
-    for i in payload["selected_options"]:
-        if i["value"] == "is_approved":
-            # and here, because of the beforementioned assumption,
-            # we have to substract 2 instead of 1. that's jank tbh
-            checker_load -= 2
-
     db.execute("UPDATE mentors SET LOAD = ? "
                "WHERE TAG = ?", (checker_load, checker_tag))
     db.commit()
+    await respond(replace_original=True, blocks=msg_blocks)
+
+
+@app.action("revise")
+async def revise_lab(ack, body, respond):
+    await ack()
+    checker_tag = body["user"]["id"]
+    msg_blocks = get_appr_blocks(
+        body["message"]["blocks"][0]["text"]["text"])
+    db = get_db()
+    checker_load = db.execute(
+        "SELECT LOAD FROM mentors WHERE TAG = ?", (checker_tag,)
+    ).fetchone()[0] - 1
+    db.execute("UPDATE mentors SET LOAD = ? "
+               "WHERE TAG = ?", (checker_load, checker_tag))
+    db.commit()
+    await respond(replace_original=True, blocks=msg_blocks)
 
 
 @app.command("/check_me")
@@ -94,7 +138,7 @@ async def request_mentor(ack, respond, command):
     db.commit()
     sender_tag = command["user_id"]
     # frontend boilerplate
-    mentor_dm_blocks = get_blocks(sender_tag, lab)
+    mentor_dm_blocks = get_appr_blocks(f"<@{sender_tag}> <{lab}>")
     await app.client.conversations_open(users=mentor_tag)
     await app.client.chat_postMessage(
         channel=mentor_tag,
