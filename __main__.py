@@ -1,7 +1,8 @@
-from slack_bolt.async_app import AsyncApp
-from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
+from slack_bolt.app.async_app import AsyncApp
+from slack_bolt.adapter.socket_mode.aiohttp import AsyncSocketModeHandler
 import os
 from re import search
+from re import findall
 import sqlite3
 from validators import url
 
@@ -20,7 +21,10 @@ def get_revise_blocks(textbox):
             "type": "mrkdwn",
             "text": textbox
         },
-        "accessory": {
+    },
+    {
+        "type": "actions",
+        "elements": [{
             "type": "button",
             "action_id": "revise",
             "text": {
@@ -45,7 +49,34 @@ def get_revise_blocks(textbox):
                     "text": "No"
                 }
             }
-        }
+        },
+        {
+            "type": "button",
+            "action_id": "deny",
+            "style": "danger",
+            "text": {
+                "type": "plain_text",
+                "text": "Stop checking"
+            },
+            "confirm": {
+                "title": {
+                    "type": "plain_text",
+                    "text": "Confirmation"
+                },
+                "text": {
+                    "type": "plain_text",
+                    "text": "Are you sure?"
+                },
+                "confirm": {
+                    "type": "plain_text",
+                    "text": "Yes"
+                },
+                "deny": {
+                    "type": "plain_text",
+                    "text": "No"
+                }
+            }
+        }]
     }]
 
 
@@ -56,7 +87,10 @@ def get_appr_blocks(textbox):
             "type": "mrkdwn",
             "text": textbox
         },
-        "accessory": {
+    },
+    {
+        "type": "actions",
+        "elements": [{
             "type": "button",
             "action_id": "approved",
             "text": {
@@ -81,7 +115,34 @@ def get_appr_blocks(textbox):
                     "text": "No"
                 }
             }
-        }
+        },
+        {
+            "type": "button",
+            "action_id": "deny",
+            "style": "danger",
+            "text": {
+                "type": "plain_text",
+                "text": "Stop checking"
+            },
+            "confirm": {
+                "title": {
+                    "type": "plain_text",
+                    "text": "Confirmation"
+                },
+                "text": {
+                    "type": "plain_text",
+                    "text": "Are you sure?"
+                },
+                "confirm": {
+                    "type": "plain_text",
+                    "text": "Yes"
+                },
+                "deny": {
+                    "type": "plain_text",
+                    "text": "No"
+                }
+            }
+        }]
     }]
 
 
@@ -117,6 +178,28 @@ async def revise_lab(ack, body, respond):
                "WHERE TAG = ?", (checker_load, checker_tag))
     db.commit()
     await respond(replace_original=True, blocks=msg_blocks)
+
+
+@app.action("deny")
+async def deny_lab(ack, body, respond):
+    await ack()
+    checker_tag = body["user"]["id"]
+    db = get_db()
+    checker_load = db.execute(
+        "SELECT LOAD FROM mentors WHERE TAG = ?", (checker_tag,)
+    ).fetchone()[0] - 2
+    db.execute("UPDATE mentors SET LOAD = ? "
+               "WHERE TAG = ?", (checker_load, checker_tag))
+    db.commit()
+    message_body = body["message"]["blocks"][0]["text"]["text"]
+    sender_tag = findall(r"<@.*> ", message_body)[0][2:-2]
+    lab = findall(r" <.*>", message_body)[0][2:-1]
+    await app.client.conversations_open(users=sender_tag)
+    await app.client.chat_postMessage(
+        channel=sender_tag,
+        text=f"<@{checker_tag}> stopped checking lab <{lab}>"
+    )
+    await respond(delete_original=True)
 
 
 @app.command("/check_me")
