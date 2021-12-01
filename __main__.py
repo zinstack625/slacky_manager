@@ -25,39 +25,22 @@ def get_revise_blocks(textbox):
     {
         "type": "actions",
         "elements": [{
-            "type": "button",
+            "type": "checkboxes",
             "action_id": "revise",
-            "text": {
-                "type": "plain_text",
-                "text": "Revise"
-            },
-            "confirm": {
-                "title": {
-                    "type": "plain_text",
-                    "text": "Confirmation"
-                },
+            "options": [{
                 "text": {
                     "type": "plain_text",
-                    "text": "Are you sure?"
-                },
-                "confirm": {
+                    "text": "Approved",
+                    },
+                "value": "revise"
+            }],
+            "initial_options": [{
+                "text": {
                     "type": "plain_text",
-                    "text": "Yes"
-                },
-                "deny": {
-                    "type": "plain_text",
-                    "text": "No"
-                }
-            }
-        },
-        {
-            "type": "button",
-            "action_id": "deny",
-            "style": "danger",
-            "text": {
-                "type": "plain_text",
-                "text": "Stop checking"
-            },
+                    "text": "Approved",
+                    },
+                "value": "revise"
+            }],
             "confirm": {
                 "title": {
                     "type": "plain_text",
@@ -91,12 +74,15 @@ def get_appr_blocks(textbox):
     {
         "type": "actions",
         "elements": [{
-            "type": "button",
+            "type": "checkboxes",
             "action_id": "approved",
-            "text": {
-                "type": "plain_text",
-                "text": "Approve"
-            },
+            "options": [{
+                "text": {
+                    "type": "plain_text",
+                    "text": "Approved",
+                    },
+                "value": "approve"
+            }],
             "confirm": {
                 "title": {
                     "type": "plain_text",
@@ -157,7 +143,7 @@ async def approve_lab(ack, body, respond):
     db = get_db()
     checker_load = db.execute(
         "SELECT LOAD FROM mentors WHERE TAG = ?", (checker_tag,)
-    ).fetchone()[0] + 1
+    ).fetchone()[0] - 1
     db.execute("UPDATE mentors SET LOAD = ? "
                "WHERE TAG = ?", (checker_load, checker_tag))
     db.commit()
@@ -173,7 +159,7 @@ async def revise_lab(ack, body, respond):
     db = get_db()
     checker_load = db.execute(
         "SELECT LOAD FROM mentors WHERE TAG = ?", (checker_tag,)
-    ).fetchone()[0] - 1
+    ).fetchone()[0] + 1
     db.execute("UPDATE mentors SET LOAD = ? "
                "WHERE TAG = ?", (checker_load, checker_tag))
     db.commit()
@@ -217,7 +203,7 @@ async def request_mentor(ack, respond, command):
     # even though logically it'd be better to place this after the
     # designation reply, I want to finish working with the db asap
     db.execute("UPDATE mentors SET LOAD = ? "
-               "WHERE TAG = ?", (mentor_load + 1, mentor_tag))
+               "WHERE TAG = ?", (mentor_load + 2, mentor_tag))
     db.commit()
     sender_tag = command["user_id"]
     # frontend boilerplate
