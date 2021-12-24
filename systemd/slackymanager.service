@@ -1,0 +1,10 @@
+[Unit]
+Description=Slacky Manager Slack bot for ditributing laboratory works in Cbeer'
+After=network.target
+
+[Service]
+EnvironmentFile=/var/db/slackbot/env.cfg
+ExecStart=/usr/bin/slackymanager
+User=slackbot
+Restart=always
+Type=simple

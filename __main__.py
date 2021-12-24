@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from slack_bolt.app.async_app import AsyncApp
 from slack_bolt.adapter.socket_mode.aiohttp import AsyncSocketModeHandler
 import os
