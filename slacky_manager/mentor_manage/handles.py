@@ -12,8 +12,12 @@ async def add_mentor(ack, respond, command):
     mentor_cnt = db.execute("SELECT COUNT(*) FROM mentors").fetchone()[0]
     mentor_id = command["user_id"]
     if (mentor_id,) not in db.execute("SELECT TAG FROM mentors").fetchall():
+        (mentor_load,) = db.execute("SELECT AVG(LOAD) from mentors").fetchone()
+        if mentor_load is None:
+            mentor_load = 0
         db.execute(
-            "INSERT INTO mentors VALUES(?, ?, 0)", (mentor_cnt, mentor_id))
+            "INSERT INTO mentors VALUES(?, ?, ?)",
+            (mentor_cnt, mentor_id, int(mentor_load),))
         db.commit()
         await respond("Done")
     else:
