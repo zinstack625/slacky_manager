@@ -28,3 +28,20 @@ async def distribute_lab():
                "WHERE TAG = ?", (mentor_load + 2, mentor_tag))
     db.commit()
     return mentor_tag
+
+
+def check_admin(tag):
+    db = get_db()
+    (result,) = db.execute("SELECT EXISTS(SELECT * FROM admins WHERE TAG=?)", (tag,)).fetchone()
+    if result == 0 and db.execute("SELECT * FROM admins").fetchone() is None:
+        return True
+    elif result == 0:
+        return False
+    else:
+        return True
+
+
+async def init_db():
+    db = get_db()
+    db.execute("CREATE TABLE IF NOT EXISTS mentors(ID INT PRIMARY KEY NOT NULL, TAG TEXT NOT NULL, LOAD INT DEFAULT 0)")
+    db.execute("CREATE TABLE IF NOT EXISTS admins(ID INT PRIMARY KEY NOT NULL, TAG TEXT NOT NULL, PRIORITY INT DEFAULT 0)")
