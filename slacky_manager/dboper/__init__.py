@@ -1,4 +1,5 @@
 import sqlite3
+from re import match
 from os import environ
 
 
@@ -41,7 +42,38 @@ def check_admin(tag):
         return True
 
 
+async def add_done_lab(tag, link):
+    db = get_db()
+    print(link)
+    regmatch = match(r'https://github.com/bmstu-cbeer-2021-lab1/[0-9]{2}-lab-([0-9]{2}).*', link)
+    if match is None:
+        return False
+    lab_num = regmatch.group(1)
+    lab_cnt = db.execute("SELECT COUNT(*) FROM done_labs").fetchone()[0]
+    db.execute('INSERT INTO done_labs VALUES(?, ?, ?, ?)',
+               (lab_cnt, tag, link, lab_num))
+    db.commit()
+    return True
+
+
+async def remove_done_lab(link):
+    db = get_db()
+    db.execute('DELETE FROM done_labs WHERE LINK=?', (link,))
+    db.commit()
+
+
 async def init_db():
     db = get_db()
-    db.execute("CREATE TABLE IF NOT EXISTS mentors(ID INT PRIMARY KEY NOT NULL, TAG TEXT NOT NULL, LOAD INT DEFAULT 0)")
-    db.execute("CREATE TABLE IF NOT EXISTS admins(ID INT PRIMARY KEY NOT NULL, TAG TEXT NOT NULL, PRIORITY INT DEFAULT 0)")
+    db.execute("CREATE TABLE IF NOT EXISTS mentors(\
+        ID INT PRIMARY KEY NOT NULL,\
+        TAG TEXT NOT NULL,\
+        LOAD INT DEFAULT 0)")
+    db.execute("CREATE TABLE IF NOT EXISTS admins(\
+        ID INT PRIMARY KEY NOT NULL,\
+        TAG TEXT NOT NULL,\
+        PRIORITY INT DEFAULT 0)")
+    db.execute("CREATE TABLE IF NOT EXISTS done_labs(\
+        ID INT PRIMARY KEY NOT NULL,\
+        TAG TEXT NOT NULL,\
+        LINK TEXT NOT NULL,\
+        LAB INT NOT NULL)")
