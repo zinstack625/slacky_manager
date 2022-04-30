@@ -4,9 +4,7 @@ from os import environ
 
 
 def get_db():
-    if 'DEBUG' in environ:
-        return sqlite3.connect("/var/db/slackbot/cpp-bmstu.db")
-    return sqlite3.connect("cpp-bmstu.db")
+    return sqlite3.connect(environ['DATABASE_PATH'])
 
 
 async def update_mentor_load(mentor_tag, amount=0):

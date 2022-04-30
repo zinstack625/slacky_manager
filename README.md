@@ -5,10 +5,11 @@ Slack bot for work distribution among selected group of people
 ## Environment variables that need to be set
 ### Mandatory
 
-SLACK_APP_TOKEN
-SLACK_BOT_TOKEN
+SLACK_APP_TOKEN\
+SLACK_BOT_TOKEN\
+DATABASE_PATH\
 
 ### Optional
 
-DEBUG
+DEBUG\
 START_WEB
