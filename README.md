@@ -11,5 +11,7 @@ DATABASE_PATH\
 
 ### Optional
 
-DEBUG\
-START_WEB
+START_WEB\
+
+You can set these variables in a file in /etc/slackymanager.conf\
+It is also encouraged for packages to maintain this (or similar, e.g. different prefix in BSD's) behavior
