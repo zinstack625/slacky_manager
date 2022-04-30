@@ -16,7 +16,7 @@ jobs:
     steps:
     - name: Setup
       run: |
-        sudo apt install curl python3 python3-pip python3-wheel build-essential devscripts debhelper
+        sudo apt install curl python3 python3-pip python3-wheel build-essential devscripts debhelper dh-python
         pip3 install build
     - name: Get
       uses: actions/checkout@v3
