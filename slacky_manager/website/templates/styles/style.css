@@ -1,0 +1,11 @@
+table, th, td {
+  border: 1px solid;
+  border-collapse: collapse;
+  width: 100%;
+}
+.name {
+  width: max-content;
+}
+.lab {
+  width: auto;
+}

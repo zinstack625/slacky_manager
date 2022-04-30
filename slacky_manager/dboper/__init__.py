@@ -1,11 +1,10 @@
 import sqlite3
+from re import match
 from os import environ
 
 
 def get_db():
-    if environ["DEBUG"] == 1:
-        return sqlite3.connect("/var/db/slackbot/cpp-bmstu.db")
-    return sqlite3.connect("cpp-bmstu.db")
+    return sqlite3.connect(environ['DATABASE_PATH'])
 
 
 async def update_mentor_load(mentor_tag, amount=0):
@@ -41,7 +40,65 @@ def check_admin(tag):
         return True
 
 
+async def add_done_lab(tag, link):
+    db = get_db()
+    print(link)
+    regmatch = match(r'https://github.com/bmstu-cbeer-2021-lab1/[0-9]{2}-lab-([0-9]{2}).*', link)
+    if match is None:
+        return False
+    lab_num = regmatch.group(1)
+    lab_cnt = db.execute("SELECT COUNT(*) FROM done_labs").fetchone()[0]
+    db.execute('INSERT INTO done_labs VALUES(?, ?, ?, ?)',
+               (lab_cnt, tag, link, lab_num))
+    db.commit()
+    return True
+
+
+async def remove_done_lab(link):
+    db = get_db()
+    db.execute('DELETE FROM done_labs WHERE LINK=?', (link,))
+    db.commit()
+
+
 async def init_db():
     db = get_db()
-    db.execute("CREATE TABLE IF NOT EXISTS mentors(ID INT PRIMARY KEY NOT NULL, TAG TEXT NOT NULL, LOAD INT DEFAULT 0)")
-    db.execute("CREATE TABLE IF NOT EXISTS admins(ID INT PRIMARY KEY NOT NULL, TAG TEXT NOT NULL, PRIORITY INT DEFAULT 0)")
+    db.execute("CREATE TABLE IF NOT EXISTS mentors(\
+        ID INT PRIMARY KEY NOT NULL,\
+        TAG TEXT NOT NULL,\
+        LOAD INT DEFAULT 0)")
+    db.execute("CREATE TABLE IF NOT EXISTS admins(\
+        ID INT PRIMARY KEY NOT NULL,\
+        TAG TEXT NOT NULL,\
+        PRIORITY INT DEFAULT 0)")
+    db.execute("CREATE TABLE IF NOT EXISTS done_labs(\
+        ID INT PRIMARY KEY NOT NULL,\
+        TAG TEXT NOT NULL,\
+        LINK TEXT NOT NULL,\
+        LAB INT NOT NULL)")
+
+
+# active only for website
+async def get_lab_table():
+    db = get_db()
+    table = {'table': [],
+             'labs': range(int(environ['LAB_CNT']))}
+    for student, lab in db.execute('SELECT TAG, LAB from done_labs'):
+        cur = None
+        for i, entry in enumerate(table['table']):
+            if entry['name'] == student:
+                cur = i
+                break
+        if cur is not None:
+            table['table'][cur]['labs'].append(lab)
+        else:
+            table['table'].append({
+                'name': student,
+                'labs': [lab],
+            })
+    for i in table['table']:
+        done_labs = i['labs']
+        i['labs'] = ['❌'] * int(environ['LAB_CNT'])
+        for j in done_labs:
+            i['labs'][j - 1] = '✅'
+    table['table'].sort(key=lambda x: x['name'])
+    return table

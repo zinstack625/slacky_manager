@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+<table>
+
+<tr>
+  <td>
+  Имя
+  </td>
+{% for i in labs %}
+  <td>
+  {{ i }}
+  </td>
+</tr>
+
+{% for row in table %}
+<tr>
+  <td class="name">
+  {{ row.name }}
+  </td>
+  {% for lab in row.labs %}
+  <td class="lab">
+  {{ lab }}
+  </td>
+  {% endfor %}
+</tr>
+{% endfor %}
+</table>
+</body>
+</html>
