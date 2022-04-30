@@ -4,7 +4,7 @@ from os import environ
 
 
 def get_db():
-    if environ["DEBUG"] == 1:
+    if 'DEBUG' in environ:
         return sqlite3.connect("/var/db/slackbot/cpp-bmstu.db")
     return sqlite3.connect("cpp-bmstu.db")
 
@@ -79,9 +79,11 @@ async def init_db():
         LAB INT NOT NULL)")
 
 
+# active only for website
 async def get_lab_table():
     db = get_db()
-    table = {'table': []}
+    table = {'table': [],
+             'labs': range(int(environ['LAB_CNT']))}
     for student, lab in db.execute('SELECT TAG, LAB from done_labs'):
         cur = None
         for i, entry in enumerate(table['table']):
@@ -96,6 +98,9 @@ async def get_lab_table():
                 'labs': [lab],
             })
     for i in table['table']:
-        i['labs'].sort()
+        done_labs = i['labs']
+        i['labs'] = ['❌'] * int(environ['LAB_CNT'])
+        for j in done_labs:
+            i['labs'][j - 1] = '✅'
     table['table'].sort(key=lambda x: x['name'])
     return table

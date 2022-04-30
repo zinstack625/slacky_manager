@@ -6,6 +6,16 @@
 <body>
 <table>
 
+<tr>
+  <td>
+  Имя
+  </td>
+{% for i in labs %}
+  <td>
+  {{ i }}
+  </td>
+</tr>
+
 {% for row in table %}
 <tr>
   <td class="name">
