@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html>
+<head>
+<link rel="stylesheet" href="styles/styles.css">
+</head>
 <body>
 <table>
 
 {% for row in table %}
 <tr>
-  <td>
+  <td class="name">
   {{ row.name }}
   </td>
   {% for lab in row.labs %}
-  <td>
+  <td class="lab">
   {{ lab }}
   </td>
   {% endfor %}
