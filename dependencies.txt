@@ -1,3 +1,5 @@
 slack_bolt
 validators
 aiohttp
+aiohttp_jinja2
+jinja2

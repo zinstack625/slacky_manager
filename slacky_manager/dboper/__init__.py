@@ -77,3 +77,25 @@ async def init_db():
         TAG TEXT NOT NULL,\
         LINK TEXT NOT NULL,\
         LAB INT NOT NULL)")
+
+
+async def get_lab_table():
+    db = get_db()
+    table = {'table': []}
+    for student, lab in db.execute('SELECT TAG, LAB from done_labs'):
+        cur = None
+        for i, entry in enumerate(table['table']):
+            if entry['name'] == student:
+                cur = i
+                break
+        if cur is not None:
+            table['table'][cur]['labs'].append(lab)
+        else:
+            table['table'].append({
+                'name': student,
+                'labs': [lab],
+            })
+    for i in table['table']:
+        i['labs'].sort()
+    table['table'].sort(key=lambda x: x['name'])
+    return table
