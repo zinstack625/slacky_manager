@@ -24,7 +24,7 @@ jobs:
       run: |
         SRC_DIR=$(pwd)
         cd ../
-        tar -cvJf slacky-manager_0.3.orig.tar.xz $SRC_DIR
+        tar -cvJf slacky-manager_0.3.orig.tar.xz slacky_manager
         cd $SRC_DIR
     - name: Build
       run: debuild -us -uc
