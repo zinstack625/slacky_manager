@@ -3,3 +3,9 @@ slacky-manager (0.3-1) UNRELEASED; urgency=medium
   * Initial release. (Closes: #0)
 
  -- MAINTAINER <klimanov625@outlook.com>  Sat, 30 Apr 2022 14:24:05 +0300
+
+slacky-manager (0.4-1) UNRELEASED; urgency=medium
+
+  * Added website for displaying reports. (Closes: #3)
+
+ -- MAINTAINER <klimanov625@outlook.com> Sat, 30 Apr 2022 19:13:31 +0300

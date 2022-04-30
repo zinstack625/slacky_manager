@@ -13,9 +13,6 @@ override_dh_auto_build:
 	$(call py3sdo, -m build)
 
 override_dh_auto_install:
-	# whichever called last, will result in shebang update
-	# in this case, the scripts will end up with python3 shebang
-	# reverse the order if you want to continue using python2 shebang
 	dh_auto_install
 	mkdir -p debian/$(DEB_SOURCE)/usr/lib/python3/dist-packages/
 	mkdir -p debian/$(DEB_SOURCE)/etc/systemd/system
